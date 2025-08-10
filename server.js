@@ -81,6 +81,17 @@ app.get('/danger-status', (req, res) => {
   res.json({ danger, dangerZones, latestLocation });
 });
 
+// 위험 지역 삭제 - DELETE /danger-zones/:index
+app.delete('/danger-zones/:index', (req, res) => {
+  const index = parseInt(req.params.index);
+  if (isNaN(index) || index < 0 || index >= dangerZones.length) {
+    return res.status(400).json({ error: '잘못된 인덱스' });
+  }
+  dangerZones.splice(index, 1);
+  console.log('위험 지역 삭제:', index);
+  res.json({ message: '위험 지역 삭제 완료', dangerZones });
+});
+
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
