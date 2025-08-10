@@ -1,10 +1,27 @@
-// server.js 일부
+// server.js
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
 
 let dangerZones = []; // 여러 위험 지역 저장
 let latestLocation = null;
 
+
+// 거리 계산 함수 (미터 단위)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  // ... (이전과 동일)
+  const R = 6371000;
+  const toRad = deg => deg * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
 }
 
 // 여러 위험 지역 등록 API (POST /danger-zones)
@@ -25,6 +42,8 @@ app.post('/danger-zones', (req, res) => {
   res.json({ message: '위험 지역 리스트 저장 완료' });
 });
 
+
+// 위치 전송 API (Sender가 위치를 보냄)
 app.post('/location', (req, res) => {
   const { latitude, longitude } = req.body;
   if (typeof latitude !== 'number' || typeof longitude !== 'number') {
@@ -44,6 +63,7 @@ app.post('/location', (req, res) => {
   res.json({ danger });
 });
 
+// 위험 상태 확인 API (Receiver가 위험 지역 상태 확인)
 app.get('/danger-status', (req, res) => {
   let danger = false;
   if (latestLocation && dangerZones.length > 0) {
@@ -59,4 +79,9 @@ app.get('/danger-status', (req, res) => {
     }
   }
   res.json({ danger, dangerZones, latestLocation });
+});
+
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
