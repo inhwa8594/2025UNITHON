@@ -39,7 +39,7 @@ async function testDeleteData() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                day_num: 1,
+                day_num: 2,
                 latitude: 37.5665,
                 longitude: 126.9780
             })
@@ -72,6 +72,57 @@ async function testDangerZone() {
   console.log(await res.json());
 }
 
+// 최신 위치 정보 POST 테스트
+async function testLocation() {
+  console.log("=== /location 테스트 ===");
+  const res = await fetch(`${NODE_SERVER}/location`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 }),
+  });
+  console.log(await res.json());
+}
+
+// 현재 안전 상태 GET 테스트
+async function testSafeStatus() {
+  console.log("=== /safe-status 테스트 ===");
+  const res = await fetch(`${NODE_SERVER}/safe-status`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log(await res.json());
+}
+
+// 현재 위험 상태 GET 테스트
+async function testDangerStatus() {
+  console.log("=== /danger-status 테스트 ===");
+  const res = await fetch(`${NODE_SERVER}/danger-status`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log(await res.json());
+}
+
+// 특정 인덱스의 안전 지역 삭제 테스트
+async function testDeleteSafeZone(index) {
+  console.log(`=== /safe-zones/${index} 삭제 테스트 ===`);
+  const res = await fetch(`${NODE_SERVER}/safe-zones/${index}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log(await res.json());
+}
+
+// 특정 인덱스의 위험 지역 삭제 테스트
+async function testDeleteDangerZone(index) {
+  console.log(`=== /danger-zones/${index} 삭제 테스트 ===`);
+  const res = await fetch(`${NODE_SERVER}/danger-zones/${index}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  console.log(await res.json());
+}
+
 async function runTests() {
   await testAddData();
   await testTrainModel();
@@ -79,6 +130,14 @@ async function runTests() {
   await testDeleteData();
   await testSafeZone();
   await testDangerZone();
+
+  await testLocation();
+  await testSafeStatus();
+  await testDangerStatus();
+
+  // 인덱스 예시: 0번 위치 삭제 시도
+  await testDeleteSafeZone(0);
+  await testDeleteDangerZone(0);
 }
 
 runTests();
