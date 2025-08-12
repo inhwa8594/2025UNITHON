@@ -108,6 +108,27 @@ app.post("/check_location", async (req, res) => {
       body: JSON.stringify(pythonPayload),
     });
 
+
+    let isSafe = false;
+    for (const zone of safeZones) {
+      const dist = calculateDistance(latitude, longitude, zone.latitude, zone.longitude);
+      if (dist <= zone.radius) {
+        isSafe = true;
+        break;
+      }
+    }
+    let danger = false;
+    for (const zone of dangerZones) {
+      const dist = calculateDistance(latitude, longitude, zone.latitude, zone.longitude);
+      if (dist <= zone.radius) {
+        danger = true;
+        break;
+      }
+    }
+    console.log(`[location] 위치 안전 여부: isSafe=${isSafe}, danger=${danger}`);
+    res.json({ isSafe, danger });
+
+
     const result = await pythonRes.json();
     console.log("[check_location] 파이썬 응답:", result);
     res.json(result);
