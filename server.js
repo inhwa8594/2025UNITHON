@@ -77,6 +77,11 @@ app.post("/check_location", async (req, res) => {
   }
 });
 
+
+let safeZones = [];
+let dangerZones = [];
+let latestLocation = null;
+
 app.post('/safe-zones', (req, res) => {
   console.log("[/safe-zones] 요청 수신:", req.body);
   const zones = req.body;
