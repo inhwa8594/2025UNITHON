@@ -8,7 +8,7 @@ async function testAddData() {
   const res = await fetch(`${NODE_SERVER}/add_data`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 }) // 서울 좌표 예시
+    body: JSON.stringify({ latitude: 37.4955, longitude: 126.9573 }) // 서울 좌표 예시
   });
   console.log(await res.json());
 }
@@ -27,7 +27,7 @@ async function testCheckLocation() {
   const res = await fetch(`${NODE_SERVER}/check_location`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 })
+    body: JSON.stringify({ latitude: 37.4955, longitude: 126.9573 })
   });
   console.log(await res.json());
 }
@@ -40,8 +40,8 @@ async function testDeleteData() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 day_num: 2,
-                latitude: 37.5665,
-                longitude: 126.9780
+                latitude: 37.4955,
+                longitude: 126.9573
             })
         });
 
@@ -57,7 +57,7 @@ async function testSafeZone() {
   const res = await fetch(`${NODE_SERVER}/safe-zones`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify([{ latitude: 37.5665, longitude: 126.9780, radius: 500 }])
+    body: JSON.stringify([{ latitude: 37.4955, longitude: 126.9573, radius: 500 }])
   });
   console.log(await res.json());
 }
@@ -67,7 +67,7 @@ async function testDangerZone() {
   const res = await fetch(`${NODE_SERVER}/danger-zones`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify([{ latitude: 37.5651, longitude: 126.98955, radius: 300 }])
+    body: JSON.stringify([{ latitude: 37.4955, longitude: 126.9573, radius: 300 }])
   });
   console.log(await res.json());
 }
@@ -78,7 +78,7 @@ async function testLocation() {
   const res = await fetch(`${NODE_SERVER}/location`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ latitude: 37.5665, longitude: 126.9780 }),
+    body: JSON.stringify({ latitude: 37.4955, longitude: 126.9573 }),
   });
   console.log(await res.json());
 }
