@@ -1,39 +1,118 @@
-// server.js
-const express = require('express');
-const cors = require('cors');
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-let dangerZones = []; // 여러 위험 지역 저장
+// --- Python API 통신 부분 ---
+function getDayNum() {
+  const day = new Date().getDay();
+  return day === 0 ? 6 : day - 1;
+}
+
+app.post("/add_data", async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    const day_num = getDayNum();
+
+    const pythonPayload = [{ day_num, latitude, longitude }];
+
+    const pythonRes = await fetch("https://two025unithonpython.onrender.com/add_data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pythonPayload),
+    });
+
+    const result = await pythonRes.json();
+    res.json(result);
+
+    //gkrtmq
+    const aaa = await fetch("https://two025unithonpython.onrender.com/train_model", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    })
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Python API 호출 실패" });
+  }
+});
+
+app.post("/train_model", async (req, res) => {
+  try {
+    const pythonRes = await fetch("https://two025unithonpython.onrender.com/train_model", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const result = await pythonRes.json();
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Python API 호출 실패" });
+  }
+});
+
+app.post("/check_location", async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    const day_num = getDayNum();
+
+    const pythonPayload = [{ day_num, latitude, longitude }];
+
+    const pythonRes = await fetch("https://two025unithonpython.onrender.com/detect_anomaly", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pythonPayload),
+    });
+
+    const result = await pythonRes.json();
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Python API 호출 실패" });
+  }
+});
+
+// --- 위험 지역 관리 부분 ---
+let safeZones = [];
+let dangerZones = [];
 let latestLocation = null;
 
-
-// 거리 계산 함수 (미터 단위)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = deg => deg * Math.PI / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-// 여러 위험 지역 등록 API (POST /danger-zones)
-app.post('/danger-zones', (req, res) => {
-  const zones = req.body; // [{latitude, longitude, radius}, ...]
-  if (!Array.isArray(zones)) {
-    return res.status(400).json({ error: '위험 지역 리스트여야 합니다.' });
-  }
+app.post('/safe-zones', (req, res) => {
+  const zones = req.body;
+  if (!Array.isArray(zones)) return res.status(400).json({ error: '안전 지역 리스트여야 합니다.' });
   for (const zone of zones) {
-    if (typeof zone.latitude !== 'number' ||
-        typeof zone.longitude !== 'number' ||
-        typeof zone.radius !== 'number') {
+    if (typeof zone.latitude !== 'number' || typeof zone.longitude !== 'number' || typeof zone.radius !== 'number') {
+      return res.status(400).json({ error: '잘못된 안전 지역 데이터' });
+    }
+  }
+  safeZones = zones;
+  console.log('안전 지역 리스트 업데이트:', safeZones);
+  res.json({ message: '안전 지역 리스트 저장 완료' });
+});
+
+app.post('/danger-zones', (req, res) => {
+  const zones = req.body;
+  if (!Array.isArray(zones)) return res.status(400).json({ error: '위험 지역 리스트여야 합니다.' });
+  for (const zone of zones) {
+    if (typeof zone.latitude !== 'number' || typeof zone.longitude !== 'number' || typeof zone.radius !== 'number') {
       return res.status(400).json({ error: '잘못된 위험 지역 데이터' });
     }
   }
@@ -42,14 +121,21 @@ app.post('/danger-zones', (req, res) => {
   res.json({ message: '위험 지역 리스트 저장 완료' });
 });
 
-
-// 위치 전송 API (Sender가 위치를 보냄)
 app.post('/location', (req, res) => {
   const { latitude, longitude } = req.body;
   if (typeof latitude !== 'number' || typeof longitude !== 'number') {
     return res.status(400).json({ error: 'Invalid input' });
   }
   latestLocation = { latitude, longitude };
+
+  let isSafe = false;
+  for (const zone of safeZones) {
+    const dist = calculateDistance(latitude, longitude, zone.latitude, zone.longitude);
+    if (dist <= zone.radius) {
+      isSafe = true;
+      break;
+    }
+  }
 
   let danger = false;
   for (const zone of dangerZones) {
@@ -60,10 +146,26 @@ app.post('/location', (req, res) => {
     }
   }
 
-  res.json({ danger });
+  res.json({ isSafe, danger });
 });
 
-// 위험 상태 확인 API (Receiver가 위험 지역 상태 확인)
+app.get('/safe-status', (req, res) => {
+  let isSafe = false;
+  if (latestLocation && safeZones.length > 0) {
+    for (const zone of safeZones) {
+      const dist = calculateDistance(
+        latestLocation.latitude, latestLocation.longitude,
+        zone.latitude, zone.longitude,
+      );
+      if (dist <= zone.radius) {
+        isSafe = true;
+        break;
+      }
+    }
+  }
+  res.json({ isSafe, safeZones, latestLocation });
+});
+
 app.get('/danger-status', (req, res) => {
   let danger = false;
   if (latestLocation && dangerZones.length > 0) {
@@ -81,7 +183,6 @@ app.get('/danger-status', (req, res) => {
   res.json({ danger, dangerZones, latestLocation });
 });
 
-// 위험 지역 삭제 - DELETE /danger-zones/:index
 app.delete('/danger-zones/:index', (req, res) => {
   const index = parseInt(req.params.index);
   if (isNaN(index) || index < 0 || index >= dangerZones.length) {
@@ -90,6 +191,16 @@ app.delete('/danger-zones/:index', (req, res) => {
   dangerZones.splice(index, 1);
   console.log('위험 지역 삭제:', index);
   res.json({ message: '위험 지역 삭제 완료', dangerZones });
+});
+
+app.delete('/safe-zones/:index', (req, res) => {
+  const index = parseInt(req.params.index);
+  if (isNaN(index) || index < 0 || index >= safeZones.length) {
+    return res.status(400).json({ error: '잘못된 인덱스' });
+  }
+  safeZones.splice(index, 1);
+  console.log('안전 지역 삭제:', index);
+  res.json({ message: '안전 지역 삭제 완료', safeZones });
 });
 
 
