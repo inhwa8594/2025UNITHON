@@ -32,6 +32,26 @@ async function testCheckLocation() {
   console.log(await res.json());
 }
 
+async function testDeleteData() {
+    console.log("=== /delete_data 테스트 ===");
+    try {
+        const res = await fetch(`${NODE_SERVER}/delete_data`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                day_num: 1,
+                latitude: 37.5665,
+                longitude: 126.9780
+            })
+        });
+
+        const json = await res.json();
+        console.log(json);
+    } catch (err) {
+        console.error("Error:", err);
+    }
+}
+
 async function testSafeZone() {
   console.log("=== /safe-zones 테스트 ===");
   const res = await fetch(`${NODE_SERVER}/safe-zones`, {
@@ -56,6 +76,7 @@ async function runTests() {
   await testAddData();
   await testTrainModel();
   await testCheckLocation();
+  await testDeleteData();
   await testSafeZone();
   await testDangerZone();
 }

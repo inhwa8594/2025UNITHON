@@ -37,6 +37,32 @@ app.post("/add_data", async (req, res) => {
   }
 });
 
+app.post("/delete_data", async (req, res) => {
+    console.log("[/delete_data] 요청 수신:", req.body);
+
+    const { latitude, longitude } = req.body;
+    const day_num = new Date().getDay(); // 0=일요일, 1=월요일...
+
+    try {
+        const response = await fetch(`${PYTHON_SERVER}/delete_data`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                day_num,
+                latitude,
+                longitude
+            })
+        });
+
+        const data = await response.json();
+        console.log("[delete_data] 파이썬 응답:", data);
+        res.json(data);
+    } catch (error) {
+        console.error("[delete_data][ERROR]", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post("/train_model", async (req, res) => {
   console.log("[/train_model] 요청 수신");
   try {
