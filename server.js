@@ -44,7 +44,7 @@ app.post("/delete_data", async (req, res) => {
     const day_num = new Date().getDay(); // 0=일요일, 1=월요일...
 
     try {
-        const response = await fetch(`${PYTHON_SERVER}/delete_data`, {
+        const response = await fetch("https://two025unithonpython.onrender.com/delete_data", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
