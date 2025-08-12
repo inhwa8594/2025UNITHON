@@ -19,7 +19,7 @@ app.post("/add_data", async (req, res) => {
     const { latitude, longitude } = req.body;
     const day_num = getDayNum();
 
-    const pythonPayload = [{ day_num, latitude, longitude }];
+    const pythonPayload = { day_num, latitude, longitude };
 
     const pythonRes = await fetch("https://two025unithonpython.onrender.com/add_data", {
       method: "POST",
@@ -30,11 +30,11 @@ app.post("/add_data", async (req, res) => {
     const result = await pythonRes.json();
     res.json(result);
 
-    //gkrtmq
+    /*//gkrtmq
     const aaa = await fetch("https://two025unithonpython.onrender.com/train_model", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-    })
+    })*/
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Python API 호출 실패" });
@@ -61,7 +61,7 @@ app.post("/check_location", async (req, res) => {
     const { latitude, longitude } = req.body;
     const day_num = getDayNum();
 
-    const pythonPayload = [{ day_num, latitude, longitude }];
+    const pythonPayload = { day_num, latitude, longitude };
 
     const pythonRes = await fetch("https://two025unithonpython.onrender.com/detect_anomaly", {
       method: "POST",

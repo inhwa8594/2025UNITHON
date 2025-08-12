@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-const NODE_SERVER = "http://localhost:3000"; // Express 서버 주소
+const NODE_SERVER = "https://two025unithon.onrender.com"; // Express 서버 주소
 const PYTHON_SERVER = "https://two025unithonpython.onrender.com"; // FastAPI 서버 주소
 
 async function testAddData() {
